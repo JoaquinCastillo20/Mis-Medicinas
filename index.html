@@ -665,6 +665,14 @@
         let selectedColor = '#3b82f6';
         let notificationIntervals = {};
 
+        // Sobrescribir alert para Android
+if (window.AndroidBridge) {
+    window.alert = function(msg) {
+        // No hacer nada - el Toast de Android ya se muestra
+        return true;
+    };
+}
+
         // Inicializar
         function init() {
             updateCurrentTime();
