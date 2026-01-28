@@ -521,6 +521,65 @@
             font-weight: 600;
             cursor: pointer;
         }
+
+        /* CUSTOM CONFIRM MODAL */
+        .custom-confirm-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .custom-confirm-overlay.show {
+            display: flex;
+        }
+
+        .custom-confirm-box {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 350px;
+            width: 85%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .custom-confirm-message {
+            font-size: 15px;
+            color: #333;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .custom-confirm-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .custom-confirm-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .custom-confirm-cancel {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .custom-confirm-ok {
+            background: #667eea;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -710,22 +769,45 @@
         </div>
     </div>
 
+    <!-- CUSTOM CONFIRM MODAL -->
+    <div id="customConfirmOverlay" class="custom-confirm-overlay">
+        <div class="custom-confirm-box">
+            <div class="custom-confirm-message" id="customConfirmMessage"></div>
+            <div class="custom-confirm-buttons">
+                <button class="custom-confirm-button custom-confirm-cancel" onclick="resolveCustomConfirm(false)">Cancelar</button>
+                <button class="custom-confirm-button custom-confirm-ok" onclick="resolveCustomConfirm(true)">OK</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-// CUSTOM ALERT FUNCTION - Reemplaza alert() nativo
-function showAlert(message) {
-    // Si está en Android, usar Toast
-    if (window.AndroidBridge) {
-        // El Toast ya se muestra automáticamente desde Android
-        // Solo mostramos el popup custom también
-    }
-    
-    // Mostrar popup custom
-    document.getElementById('customAlertMessage').textContent = message;
-    document.getElementById('customAlertOverlay').classList.add('show');
-}
+        // CUSTOM ALERT FUNCTION - Reemplaza alert() nativo
+        function showAlert(message) {
+            document.getElementById('customAlertMessage').textContent = message;
+            document.getElementById('customAlertOverlay').classList.add('show');
+        }
 
         function closeCustomAlert() {
             document.getElementById('customAlertOverlay').classList.remove('show');
+        }
+
+        // CUSTOM CONFIRM FUNCTION - Reemplaza confirm() nativo
+        let confirmResolve = null;
+
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                confirmResolve = resolve;
+                document.getElementById('customConfirmMessage').textContent = message;
+                document.getElementById('customConfirmOverlay').classList.add('show');
+            });
+        }
+
+        function resolveCustomConfirm(result) {
+            document.getElementById('customConfirmOverlay').classList.remove('show');
+            if (confirmResolve) {
+                confirmResolve(result);
+                confirmResolve = null;
+            }
         }
 
         // Estado global
@@ -837,8 +919,9 @@ function showAlert(message) {
             }
         }
 
-        function finishTreatment(medId) {
-            if (confirm('¿Estás seguro de que querés finalizar este medicamento? Se eliminará de tu lista.')) {
+        async function finishTreatment(medId) {
+            const confirmed = await showConfirm('¿Estás seguro de que querés finalizar este medicamento? Se eliminará de tu lista.');
+            if (confirmed) {
                 medications = medications.filter(m => m.id !== medId);
                 saveData();
                 renderAll();
@@ -1465,8 +1548,9 @@ function showAlert(message) {
             renderAll();
         }
 
-        function deleteMedication(id) {
-            if (!confirm('¿Estás seguro de que querés eliminar este medicamento?')) return;
+        async function deleteMedication(id) {
+            const confirmed = await showConfirm('¿Estás seguro de que querés eliminar este medicamento?');
+            if (!confirmed) return;
 
             medications = medications.filter(m => m.id !== id);
             stopNotificationReminders(id);
