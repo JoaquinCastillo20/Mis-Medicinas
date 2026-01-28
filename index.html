@@ -5,8 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Control inteligente de medicación con recordatorios, ayuno y dependencias">
     <meta name="theme-color" content="#667eea">
-    <title>Mi Control de Medicación</title>
+    <title>Atender.Te - Control de Medicación</title>
     <style>
+        /* SVG ICONS */
+        .icon-svg {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+
+        .icon-svg-large {
+            width: 28px;
+            height: 28px;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -18,6 +32,520 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 0;
+            transition: background 0.3s ease;
+            font-size: 18px; /* Aumentado de default */
+        }
+
+        /* DARK MODE */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+        }
+
+        body.dark-mode .app-container {
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        body.dark-mode .tabs {
+            background: #252538;
+            border-bottom-color: #3a3a52;
+        }
+
+        body.dark-mode .tab {
+            color: #a0a0b0;
+        }
+
+        body.dark-mode .tab.active {
+            background: #1a1a2e;
+            color: #667eea;
+        }
+
+        body.dark-mode .med-card,
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select,
+        body.dark-mode .form-group textarea {
+            background: #252538;
+            color: #e0e0e0;
+            border-color: #3a3a52;
+        }
+
+        body.dark-mode .modal-content,
+        body.dark-mode .custom-alert-box,
+        body.dark-mode .custom-confirm-box {
+            background: #252538;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .modal-header,
+        body.dark-mode .med-card h3,
+        body.dark-mode .item-title {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .detail,
+        body.dark-mode .help-text,
+        body.dark-mode .item-desc {
+            color: #a0a0b0;
+        }
+
+        body.dark-mode .btn-secondary {
+            background: #3a3a52;
+            color: #e0e0e0;
+            border-color: #4a4a64;
+        }
+
+        body.dark-mode .history-item {
+            border-bottom-color: #3a3a52;
+        }
+
+        body.dark-mode .conditional-field {
+            background: #2d2d44;
+            border-color: #4a5568;
+        }
+
+        body.dark-mode .custom-confirm-cancel {
+            background: #3a3a52;
+            color: #e0e0e0;
+        }
+
+        /* DARK MODE TOGGLE BUTTON */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        body.dark-mode .dark-mode-toggle {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .dark-mode-toggle:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* ========================================
+           PANTALLA DE BIENVENIDA - GLASSMORPHISM
+        ======================================== */
+        #welcomeScreen {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            overflow-y: auto;
+        }
+
+        #welcomeScreen.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .welcome-container {
+            max-width: 500px;
+            width: 90%;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 30px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .welcome-logo svg {
+            width: 70px;
+            height: 70px;
+        }
+
+        .welcome-title {
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.5px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 50px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .mode-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 24px;
+            padding: 32px 24px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .mode-card:hover::before {
+            opacity: 1;
+        }
+
+        .mode-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.25);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .mode-card:active {
+            transform: translateY(-4px) scale(1.01);
+        }
+
+        .mode-card-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .mode-card:hover .mode-card-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .mode-card-icon svg {
+            width: 36px;
+            height: 36px;
+            stroke: white;
+        }
+
+        .mode-card-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+            letter-spacing: -0.3px;
+        }
+
+        .mode-card-desc {
+            font-size: 15px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* ========================================
+           MODO ASISTIDO - ULTRA SIMPLE
+        ======================================== */
+        #assistedMode {
+            display: none;
+            min-height: 100vh;
+            background: #ffffff;
+            padding-bottom: 40px;
+        }
+
+        #assistedMode.active {
+            display: block;
+        }
+
+        body.dark-mode #assistedMode {
+            background: #1a1a1a;
+        }
+
+        .mode-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 18px 28px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 3px solid #667eea;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: 800;
+            color: #667eea;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-toggle-btn:hover {
+            transform: translateX(-5px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+            background: #667eea;
+            color: white;
+        }
+
+        .mode-toggle-btn svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        body.dark-mode .mode-toggle-btn {
+            background: #252538;
+            color: #667eea;
+            border-color: #667eea;
+        }
+
+        .assisted-header {
+            text-align: center;
+            padding: 100px 25px 50px 25px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        body.dark-mode .assisted-header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .assisted-header h1 {
+            font-size: 48px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+            line-height: 1.1;
+        }
+
+        .assisted-header p {
+            font-size: 26px;
+            font-weight: 700;
+            opacity: 0.95;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .assisted-main {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .assisted-section-title {
+            font-size: 38px;
+            font-weight: 900;
+            color: #1a1a1a;
+            margin-bottom: 30px;
+            padding-left: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        body.dark-mode .assisted-section-title {
+            color: #ffffff;
+        }
+
+        .assisted-med-item {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            border: 4px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .assisted-med-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
+        }
+
+        body.dark-mode .assisted-med-item {
+            background: #252538;
+            border-color: #667eea;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .assisted-med-time {
+            font-size: 64px;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 20px;
+            letter-spacing: -2px;
+            text-align: center;
+        }
+
+        .assisted-med-name {
+            font-size: 38px;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        body.dark-mode .assisted-med-name {
+            color: #ffffff;
+        }
+
+        .assisted-med-dose {
+            font-size: 28px;
+            color: #555;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        body.dark-mode .assisted-med-dose {
+            color: #a0a0b0;
+        }
+
+        .assisted-btn-take {
+            width: 100%;
+            padding: 35px;
+            font-size: 32px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .assisted-btn-take:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(16, 185, 129, 0.45);
+        }
+
+        .assisted-btn-take:active {
+            transform: translateY(-2px);
+        }
+
+        .assisted-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-top: 50px;
+        }
+
+        .assisted-btn {
+            padding: 38px;
+            font-size: 28px;
+            font-weight: 900;
+            background: white;
+            color: #667eea;
+            border: 4px solid #667eea;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .assisted-btn {
+            background: #252538;
+            color: #667eea;
+        }
+
+        .assisted-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.35);
+        }
+
+        .assisted-btn svg {
+            width: 32px;
+            height: 32px;
+        }
+
+        .assisted-empty {
+            text-align: center;
+            padding: 80px 30px;
+            font-size: 32px;
+            color: #999;
+            font-weight: 700;
+            line-height: 1.5;
+        }
+
+        /* ========================================
+           MEJORAS MODO COMPLETO - UX MODERNA
+        ======================================== */
+        #techMode {
+            display: none;
+        }
+
+        #techMode.active {
+            display: block;
         }
 
         .app-container {
@@ -26,52 +554,211 @@
             background: white;
             min-height: 100vh;
             position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.1);
         }
 
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
+            padding: 30px 20px 25px 20px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="2" fill="white" opacity="0.1"/></svg>');
+            opacity: 0.3;
         }
 
         .header h1 {
-            font-size: 24px;
-            margin-bottom: 5px;
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 800;
+            position: relative;
+            letter-spacing: -0.5px;
         }
 
-        .header p {
-            font-size: 14px;
-            opacity: 0.9;
+        .header .current-date {
+            font-size: 15px;
+            opacity: 0.95;
+            font-weight: 600;
+            position: relative;
+            letter-spacing: 0.3px;
         }
 
         .tabs {
             display: flex;
-            background: #f8f9fa;
-            border-bottom: 2px solid #e0e0e0;
+            background: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode .tabs {
+            background: #252538;
+            border-bottom-color: #3a3a52;
         }
 
         .tab {
             flex: 1;
-            padding: 15px;
+            padding: 18px 15px;
             text-align: center;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            color: #666;
-            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: 700;
+            color: #999;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            letter-spacing: -0.2px;
+        }
+
+        .tab:hover {
+            background: rgba(102, 126, 234, 0.05);
+            color: #667eea;
         }
 
         .tab.active {
-            background: white;
+            background: transparent;
             color: #667eea;
-            border-bottom: 3px solid #667eea;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px 3px 0 0;
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                width: 0;
+                opacity: 0;
+            }
+            to {
+                width: 40px;
+                opacity: 1;
+            }
         }
 
         .content {
             padding: 20px;
+            animation: fadeInContent 0.5s ease;
+        }
+
+        @keyframes fadeInContent {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Dashboard Insights - NUEVO */
+        .dashboard-insights {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+            animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .insight-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            border-radius: 16px;
+            padding: 18px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid #f0f0f0;
+        }
+
+        body.dark-mode .insight-card {
+            background: linear-gradient(135deg, #252538 0%, #2d2d44 100%);
+            border-color: #3a3a52;
+        }
+
+        .insight-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .insight-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+        }
+
+        .insight-value {
+            font-size: 28px;
+            font-weight: 900;
+            color: #667eea;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .insight-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        body.dark-mode .insight-label {
+            color: #a0a0b0;
+        }
+
+        /* Section Headers - MEJORADO */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        body.dark-mode .section-header {
+            border-bottom-color: #3a3a52;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1a1a1a;
+            letter-spacing: -0.3px;
+        }
+
+        body.dark-mode .section-title {
+            color: #e0e0e0;
+        }
+
+        .section-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
 
         .tab-content {
@@ -84,15 +771,47 @@
 
         .btn-primary {
             width: 100%;
-            padding: 15px;
+            padding: 20px; /* Aumentado de 15px */
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+            font-size: 20px; /* Aumentado de 16px */
+            font-weight: 700; /* Más bold */
             cursor: pointer;
             margin-top: 10px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            min-height: 60px; /* Mínimo para fácil toque */
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn-primary:active::before {
+            width: 300px;
+            height: 300px;
         }
 
         .btn-secondary {
@@ -113,20 +832,23 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
+            margin-bottom: 10px; /* Aumentado de 8px */
+            color: #222; /* Más contraste */
+            font-weight: 700; /* Más bold */
+            font-size: 18px; /* Aumentado de 14px */
+            line-height: 1.4;
         }
 
         .form-group input,
         .form-group select,
         .form-group textarea {
             width: 100%;
-            padding: 12px;
+            padding: 16px; /* Aumentado de 12px */
             border: 2px solid #e0e0e0;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 18px; /* Aumentado de 14px */
+            transition: all 0.3s ease;
+            min-height: 56px; /* Mínimo para fácil toque */
         }
 
         .form-group input:focus,
@@ -134,6 +856,8 @@
         .form-group textarea:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
         .checkbox-group {
@@ -148,106 +872,191 @@
         }
 
         .med-card {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-left: 6px solid;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            border-left: 5px solid;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .med-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent 0%, rgba(102, 126, 234, 0.03) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .med-card:hover::before {
+            opacity: 1;
+        }
+
+        .med-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
+        }
+
+        .med-card:active {
+            transform: translateY(-2px) scale(1.005);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            }
+            50% {
+                transform: scale(1.01);
+                box-shadow: 0 8px 25px rgba(255, 193, 7, 0.25);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         .med-card h3 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 18px;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            line-height: 1.3;
+            letter-spacing: -0.3px;
         }
 
         .med-card .detail {
             display: flex;
             align-items: center;
-            margin: 5px 0;
-            font-size: 13px;
-            color: #666;
+            margin: 8px 0;
+            font-size: 15px;
+            color: #555;
+            font-weight: 600;
+            line-height: 1.6;
         }
 
         .med-card .detail span {
-            margin-right: 5px;
+            margin-right: 6px;
         }
 
         .med-card .actions {
-            margin-top: 10px;
+            margin-top: 16px;
             display: flex;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
         .btn-small {
-            padding: 8px 15px;
+            padding: 12px 20px;
             border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 600;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            min-height: 44px;
+            letter-spacing: -0.2px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-small:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+        }
+
+        .btn-small:active {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .btn-take {
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
         }
 
         .btn-edit {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
         }
 
         .btn-delete {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
         }
 
         .pending-card {
-            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+            animation: pulse 2.5s ease-in-out infinite;
+            border-left-color: #f59e0b !important;
         }
 
         .taken-card {
-            background: #d1fae5;
-            opacity: 0.7;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            opacity: 0.85;
+            border-left-color: #10b981 !important;
         }
 
         .blocked-card {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left-color: #ef4444 !important;
         }
 
         .low-stock-card {
-            background: #ffedd5;
+            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
             border-left-color: #f97316 !important;
         }
 
         .status-badge {
             display: inline-block;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 800;
             margin-left: 10px;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .status-pending {
-            background: #fef3c7;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
             color: #92400e;
         }
 
         .status-taken {
-            background: #d1fae5;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
             color: #065f46;
         }
 
         .status-blocked {
-            background: #fee2e2;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             color: #991b1b;
         }
 
         .status-low-stock {
-            background: #ffedd5;
+            background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
             color: #9a3412;
         }
 
@@ -262,6 +1071,7 @@
             z-index: 1000;
             align-items: center;
             justify-content: center;
+            animation: fadeIn 0.3s ease;
         }
 
         .modal.show {
@@ -276,13 +1086,26 @@
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
+            animation: scaleIn 0.3s ease;
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .modal-header {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
+            font-size: 26px; /* Aumentado de 20px */
+            font-weight: 700;
+            margin-bottom: 25px; /* Aumentado de 20px */
+            color: #222; /* Más contraste */
+            line-height: 1.3;
         }
 
         .notification {
@@ -335,12 +1158,14 @@
         .empty-state {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: #555; /* Más contraste */
+            font-size: 20px; /* Más grande */
+            line-height: 1.6;
         }
 
         .empty-state-icon {
-            font-size: 48px;
-            margin-bottom: 15px;
+            font-size: 64px; /* Aumentado de 48px */
+            margin-bottom: 20px; /* Aumentado de 15px */
         }
 
         .history-item {
@@ -378,10 +1203,11 @@
         }
 
         .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
+            font-size: 15px; /* Aumentado de 12px */
+            color: #555; /* Más contraste */
+            margin-top: 8px;
             font-style: italic;
+            line-height: 1.5;
         }
 
         .color-picker-group {
@@ -392,21 +1218,23 @@
         }
 
         .color-option {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
+            width: 55px; /* Aumentado de 40px */
+            height: 55px; /* Aumentado de 40px */
+            border-radius: 10px; /* Aumentado de 8px */
             border: 3px solid transparent;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
 
         .color-option:hover {
-            transform: scale(1.1);
+            transform: scale(1.15) rotate(5deg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
         .color-option.selected {
             border-color: #333;
-            transform: scale(1.15);
+            transform: scale(1.2);
+            animation: pulse 1s ease-in-out infinite;
         }
 
         .stock-warning {
@@ -504,22 +1332,24 @@
         }
 
         .custom-alert-message {
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            font-size: 20px; /* Aumentado de 15px */
+            color: #222; /* Más contraste */
+            margin-bottom: 25px; /* Aumentado de 20px */
+            line-height: 1.6;
+            font-weight: 500;
         }
 
         .custom-alert-button {
             width: 100%;
-            padding: 12px;
+            padding: 18px; /* Aumentado de 12px */
             background: #667eea;
             color: white;
             border: none;
             border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 20px; /* Aumentado de 15px */
+            font-weight: 700;
             cursor: pointer;
+            min-height: 60px;
         }
 
         /* CUSTOM CONFIRM MODAL */
@@ -550,25 +1380,27 @@
         }
 
         .custom-confirm-message {
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 20px;
-            line-height: 1.5;
+            font-size: 20px; /* Aumentado de 15px */
+            color: #222; /* Más contraste */
+            margin-bottom: 25px; /* Aumentado de 20px */
+            line-height: 1.6;
+            font-weight: 500;
         }
 
         .custom-confirm-buttons {
             display: flex;
-            gap: 10px;
+            gap: 15px; /* Aumentado de 10px */
         }
 
         .custom-confirm-button {
             flex: 1;
-            padding: 12px;
+            padding: 18px; /* Aumentado de 12px */
             border: none;
             border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 18px; /* Aumentado de 15px */
+            font-weight: 700;
             cursor: pointer;
+            min-height: 60px;
         }
 
         .custom-confirm-cancel {
@@ -583,16 +1415,116 @@
     </style>
 </head>
 <body>
+    <!-- ===== PANTALLA DE BIENVENIDA ===== -->
+    <div id="welcomeScreen">
+        <div class="welcome-container">
+            <div class="welcome-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="9" y1="9" x2="15" y2="9"/>
+                    <line x1="9" y1="15" x2="15" y2="15"/>
+                    <line x1="12" y1="3" x2="12" y2="21"/>
+                </svg>
+            </div>
+            <h1 class="welcome-title">Atender.Te</h1>
+            <p class="welcome-subtitle">Elige cómo quieres usar la aplicación</p>
+            
+            <div class="mode-selector">
+                <div class="mode-card" onclick="selectMode('tech')">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                            <path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <div class="mode-card-title">Modo Completo</div>
+                    <div class="mode-card-desc">
+                        Interfaz moderna con todas las funciones. Ideal para usuarios con experiencia tecnológica.
+                    </div>
+                </div>
+                
+                <div class="mode-card" onclick="selectMode('assisted')">
+                    <div class="mode-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="8" r="5"/>
+                            <path d="M20 21a8 8 0 1 0-16 0"/>
+                        </svg>
+                    </div>
+                    <div class="mode-card-title">Modo Asistido</div>
+                    <div class="mode-card-desc">
+                        Interfaz simple con textos grandes y botones fáciles. Ideal para adultos mayores.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODO ASISTIDO ===== -->
+    <div id="assistedMode">
+        <button class="mode-toggle-btn" onclick="showWelcome()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Cambiar Modo
+        </button>
+        
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()">
+            <span class="moon-icon">🌙</span>
+            <span class="sun-icon" style="display: none;">☀️</span>
+        </button>
+
+        <div class="assisted-header">
+            <h1>Mis Medicinas de Hoy</h1>
+            <p id="assistedDate"></p>
+        </div>
+
+        <div class="assisted-main">
+            <h2 class="assisted-section-title">⏰ Pendientes Ahora</h2>
+            <div id="assistedTodayList"></div>
+
+            <div class="assisted-actions">
+                <button class="assisted-btn" onclick="switchToTechAndAddMed()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="16"/>
+                        <line x1="8" y1="12" x2="16" y2="12"/>
+                    </svg>
+                    Agregar Medicina
+                </button>
+                
+                <button class="assisted-btn" onclick="showAssistedAllMeds()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    Ver Todas Mis Medicinas
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODO TECNOLÓGICO (APP ORIGINAL) ===== -->
+    <div id="techMode">
+    <button class="mode-toggle-btn" onclick="showWelcome()" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Cambiar Modo
+    </button>
     <div class="app-container">
+        <!-- DARK MODE TOGGLE -->
+        <button class="dark-mode-toggle" onclick="toggleDarkMode()" id="darkModeToggle">
+            🌙
+        </button>
+        
         <div class="header">
-            <h1>💊 Control de Medicación</h1>
-            <p id="currentTime">Cargando...</p>
+            <h1><svg style="width: 32px; height: 32px; vertical-align: middle; margin-right: 10px;" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><rect x="8" y="4" width="8" height="16" rx="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg>Control de Medicación</h1>
+            <p class="current-date" id="currentTime">Cargando...</p>
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('hoy')">🏠 Hoy</button>
-            <button class="tab" onclick="switchTab('medicamentos')">💊 Medicamentos</button>
-            <button class="tab" onclick="switchTab('historial')">📊 Historial</button>
+            <button class="tab active" onclick="switchTab('hoy')"><svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Hoy</button>
+            <button class="tab" onclick="switchTab('medicamentos')"><svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="16" rx="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg>Medicamentos</button>
+            <button class="tab" onclick="switchTab('historial')"><svg style="width: 18px; height: 18px; vertical-align: middle; margin-right: 5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Historial</button>
         </div>
 
         <div class="content">
@@ -604,7 +1536,7 @@
 
             <!-- TAB: MEDICAMENTOS -->
             <div id="tab-medicamentos" class="tab-content">
-                <button class="btn-primary" onclick="showAddMedModal()">➕ Agregar Medicamento</button>
+                <button class="btn-primary" onclick="showAddMedModal()"><svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Agregar Medicamento</button>
                 <div id="medicationsList" style="margin-top: 20px;"></div>
             </div>
 
@@ -739,7 +1671,7 @@
                 <textarea id="medNotes" rows="3" placeholder="Ej: Tomar con agua, no con jugo"></textarea>
             </div>
 
-            <button class="btn-primary" onclick="saveMedication()">💾 Guardar</button>
+            <button class="btn-primary" onclick="saveMedication()"><svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Guardar</button>
             <button class="btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 10px;">Cancelar</button>
         </div>
     </div>
@@ -749,7 +1681,7 @@
         <div class="modal-content">
             <div class="modal-header">Confirmar toma</div>
             <p id="confirmMessage" style="margin-bottom: 20px;"></p>
-            <button class="btn-primary" onclick="confirmTake()">✅ Sí, ya lo tomé</button>
+            <button class="btn-primary" onclick="confirmTake()"><svg style="width: 20px; height: 20px; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Sí, ya lo tomé</button>
             <button class="btn-secondary" onclick="closeConfirmModal()" style="width: 100%; margin-top: 10px;">Cancelar</button>
         </div>
     </div>
@@ -759,8 +1691,8 @@
         <div class="notification-title" id="notifTitle"></div>
         <div class="notification-message" id="notifMessage"></div>
         <div class="notification-actions">
-            <button class="btn-small btn-take" onclick="quickTake()">✅ Ya lo tomé</button>
-            <button class="btn-small" onclick="dismissNotification()" style="background: #6b7280; color: white;">❌ Cerrar</button>
+            <button class="btn-small btn-take" onclick="quickTake()"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Ya lo tomé</button>
+            <button class="btn-small" onclick="dismissNotification()" style="background: #6b7280; color: white;"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cerrar</button>
         </div>
     </div>
 
@@ -835,6 +1767,28 @@
             input.value = input.value.replace(/[^0-9]/g, '');
         }
 
+        // SVG ICONS
+        const icons = {
+            pill: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="4" width="8" height="16" rx="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg>',
+            clock: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+            home: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',
+            chart: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+            utensils: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 010 8h-1M2 8h16v9a4 4 0 01-4 4H6a4 4 0 01-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>',
+            hourglass: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>',
+            package: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+            check: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+            info: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+            notes: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>',
+            alert: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+            link: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
+            calendar: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+            repeat: '<svg class="icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>'
+        };
+
+        function getIcon(name) {
+            return icons[name] || '';
+        }
+
         // Estado global
         let medications = JSON.parse(localStorage.getItem('medications')) || [];
         let history = JSON.parse(localStorage.getItem('history')) || [];
@@ -845,6 +1799,7 @@
 
         // Inicializar
         function init() {
+            loadDarkMode();
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
             setInterval(checkSchedule, 60000);
@@ -854,10 +1809,39 @@
             checkTreatmentEnds();
         }
 
+        // DARK MODE
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDark);
+            updateDarkModeIcon();
+        }
+
+        function loadDarkMode() {
+            const isDark = localStorage.getItem('darkMode') === 'true';
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+            }
+            updateDarkModeIcon();
+        }
+
+        function updateDarkModeIcon() {
+            const toggle = document.getElementById('darkModeToggle');
+            const isDark = document.body.classList.contains('dark-mode');
+            toggle.textContent = isDark ? '☀️' : '🌙';
+        }
+
         function updateCurrentTime() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('currentTime').textContent = now.toLocaleDateString('es-AR', options);
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let dateStr = now.toLocaleDateString('es-AR', options);
+            
+            // Capitalizar primera letra de cada palabra importante (día de la semana y mes)
+            // Formato típico: "miércoles 29 de enero de 2025"
+            dateStr = dateStr.replace(/^(\w)/, (match) => match.toUpperCase()); // Primera letra (día)
+            dateStr = dateStr.replace(/ de (\w)/, (match, letter) => ' de ' + letter.toUpperCase()); // Primera letra del mes
+            
+            document.getElementById('currentTime').textContent = dateStr;
         }
 
         function requestNotificationPermission() {
@@ -922,12 +1906,12 @@
 
             container.innerHTML = medsAwaitingDecision.map(med => `
                 <div class="treatment-end-card">
-                    <h3>⏰ Fin del tratamiento</h3>
+                    <h3><svg style="width: 22px; height: 22px; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Fin del tratamiento</h3>
                     <p><strong>${med.name}</strong><br>
                     El período de tratamiento ha finalizado. ¿Deseas continuar o terminar este medicamento?</p>
                     <div class="treatment-end-actions">
-                        <button class="btn-extend" onclick="extendTreatment('${med.id}')">✅ Continuar</button>
-                        <button class="btn-finish" onclick="finishTreatment('${med.id}')">🛑 Finalizar</button>
+                        <button class="btn-extend" onclick="extendTreatment('${med.id}')"><svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Continuar</button>
+                        <button class="btn-finish" onclick="finishTreatment('${med.id}')"><svg style="width: 16px; height: 16px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Finalizar</button>
                     </div>
                 </div>
             `).join('');
@@ -940,7 +1924,7 @@
                 med.awaitingTreatmentDecision = false;
                 saveData();
                 renderAll();
-                showAlert('✅ Tratamiento extendido correctamente');
+                showAlert('✓ Tratamiento extendido correctamente');
             }
         }
 
@@ -950,7 +1934,7 @@
                 medications = medications.filter(m => m.id !== medId);
                 saveData();
                 renderAll();
-                showAlert('✅ Medicamento finalizado y eliminado');
+                showAlert('✓ Medicamento finalizado y eliminado');
             }
         }
 
@@ -965,7 +1949,7 @@
             if (todayMeds.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">🎉</div>
+                        <div class="empty-state-icon"><svg style="width: 60px; height: 60px;" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5"><rect x="8" y="4" width="8" height="16" rx="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
                         <p>No tenés medicamentos programados para hoy</p>
                         <p style="font-size: 12px; margin-top: 10px;">Agregá medicamentos en la pestaña "Medicamentos"</p>
                     </div>
@@ -988,7 +1972,7 @@
                     cardClass += ' low-stock-card';
                     stockWarning = `
                         <div class="stock-warning">
-                            <div class="stock-warning-icon">⚠️</div>
+                            <div class="stock-warning-icon"><svg style="width: 24px; height: 24px;" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
                             <div class="stock-warning-text">
                                 <strong>Stock bajo:</strong> Quedan ${med.currentStock} pastillas. ¡Recordá comprar!
                             </div>
@@ -998,17 +1982,17 @@
 
                 if (item.taken) {
                     cardClass += ' taken-card';
-                    statusBadge = '<span class="status-badge status-taken">✅ Tomado</span>';
+                    statusBadge = '<span class="status-badge status-taken"><svg style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Tomado</span>';
                 } else if (item.blocked) {
                     cardClass += ' blocked-card';
-                    statusBadge = '<span class="status-badge status-blocked">🚫 Bloqueado</span>';
+                    statusBadge = '<span class="status-badge status-blocked"><svg style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>Bloqueado</span>';
                     actionButtons = `<p style="font-size: 12px; color: #991b1b; margin-top: 10px;">${item.blockReason}</p>`;
                 } else if (item.isPending) {
                     cardClass += ' pending-card';
-                    statusBadge = '<span class="status-badge status-pending">⏰ Pendiente</span>';
+                    statusBadge = '<span class="status-badge status-pending"><svg style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Pendiente</span>';
                     actionButtons = `
                         <div class="actions">
-                            <button class="btn-small btn-take" onclick="takeMedication('${item.id}')">✅ Ya lo tomé</button>
+                            <button class="btn-small btn-take" onclick="takeMedication('${item.id}')"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Ya lo tomé</button>
                         </div>
                     `;
                 } else {
@@ -1018,13 +2002,13 @@
                 return `
                     <div class="${cardClass}" style="${cardStyle}">
                         <h3>${med.name} ${statusBadge}</h3>
-                        <div class="detail">💡 ${med.indication}</div>
-                        <div class="detail">⏰ Horario: ${item.scheduledTime}</div>
-                        ${med.requiresFasting ? `<div class="detail">🍽️ Requiere ${med.fastingHours}hs de ayuno</div>` : ''}
-                        ${med.requiresWaitAfter ? `<div class="detail">⏳ Esperar ${med.waitMinutes} min después</div>` : ''}
-                        ${med.currentStock !== undefined ? `<div class="detail">📦 Stock: ${med.currentStock} pastillas</div>` : ''}
-                        ${med.notes ? `<div class="detail">📝 ${med.notes}</div>` : ''}
-                        ${item.takenAt ? `<div class="detail" style="color: #10b981;">✅ Tomado a las ${new Date(item.takenAt).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>` : ''}
+                        <div class="detail">${getIcon('info')} ${med.indication}</div>
+                        <div class="detail">${getIcon('clock')} Horario: ${item.scheduledTime}</div>
+                        ${med.requiresFasting ? `<div class="detail">${getIcon('utensils')} Requiere ${med.fastingHours}hs de ayuno</div>` : ''}
+                        ${med.requiresWaitAfter ? `<div class="detail">${getIcon('hourglass')} Esperar ${med.waitMinutes} min después</div>` : ''}
+                        ${med.currentStock !== undefined ? `<div class="detail">${getIcon('package')} Stock: ${med.currentStock} pastillas</div>` : ''}
+                        ${med.notes ? `<div class="detail">${getIcon('notes')} ${med.notes}</div>` : ''}
+                        ${item.takenAt ? `<div class="detail" style="color: #10b981;">${getIcon('check')} Tomado a las ${new Date(item.takenAt).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>` : ''}
                         ${actionButtons}
                         ${stockWarning}
                     </div>
@@ -1038,7 +2022,7 @@
             if (medications.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">💊</div>
+                        <div class="empty-state-icon"><svg style="width: 60px; height: 60px;" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5"><rect x="8" y="4" width="8" height="16" rx="4"/><line x1="12" y1="4" x2="12" y2="20"/></svg></div>
                         <p>No tenés medicamentos configurados</p>
                         <p style="font-size: 12px; margin-top: 10px;">Presioná el botón "Agregar Medicamento" para empezar</p>
                     </div>
@@ -1050,27 +2034,27 @@
                 const cardStyle = `border-left-color: ${med.color || '#667eea'};`;
                 const durationText = med.duration === 'indefinite' ? 'Indefinido' : `${med.duration} días`;
                 const stockBadge = med.currentStock !== undefined && med.currentStock <= 5 ? 
-                    `<span class="status-badge status-low-stock">⚠️ Stock: ${med.currentStock}</span>` : '';
+                    `<span class="status-badge status-low-stock"><svg style="width: 12px; height: 12px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Stock: ${med.currentStock}</span>` : '';
 
                 return `
                     <div class="med-card" style="${cardStyle}">
                         <h3>${med.name} ${stockBadge}</h3>
-                        <div class="detail">💡 ${med.indication}</div>
+                        <div class="detail">${getIcon('info')} ${med.indication}</div>
                         <div class="detail">
                             ${med.scheduleType === 'specific' ? 
-                                `⏰ ${med.time}` : 
-                                `🔄 Cada ${med.interval} horas (primera: ${med.firstDose})`
+                                `${getIcon('clock')} ${med.time}` : 
+                                `${getIcon('repeat')} Cada ${med.interval} horas (primera: ${med.firstDose})`
                             }
                         </div>
-                        <div class="detail">📅 Duración: ${durationText}</div>
-                        ${med.currentStock !== undefined ? `<div class="detail">📦 Stock: ${med.currentStock}/${med.boxQuantity} pastillas</div>` : ''}
-                        ${med.requiresFasting ? `<div class="detail">🍽️ Ayuno: ${med.fastingHours}hs antes</div>` : ''}
-                        ${med.requiresWaitAfter ? `<div class="detail">⏳ Esperar: ${med.waitMinutes} min después</div>` : ''}
-                        ${med.dependsOn ? `<div class="detail">🔗 Depende de: ${getMedName(med.dependsOn)}</div>` : ''}
+                        <div class="detail">${getIcon('calendar')} Duración: ${durationText}</div>
+                        ${med.currentStock !== undefined ? `<div class="detail">${getIcon('package')} Stock: ${med.currentStock}/${med.boxQuantity} pastillas</div>` : ''}
+                        ${med.requiresFasting ? `<div class="detail">${getIcon('utensils')} Ayuno: ${med.fastingHours}hs antes</div>` : ''}
+                        ${med.requiresWaitAfter ? `<div class="detail">${getIcon('hourglass')} Esperar: ${med.waitMinutes} min después</div>` : ''}
+                        ${med.dependsOn ? `<div class="detail">${getIcon('link')} Depende de: ${getMedName(med.dependsOn)}</div>` : ''}
                         <div class="actions">
-                            <button class="btn-small btn-edit" onclick="editMedication('${med.id}')">✏️ Editar</button>
-                            <button class="btn-small btn-delete" onclick="deleteMedication('${med.id}')">🗑️ Eliminar</button>
-                            ${med.currentStock !== undefined ? `<button class="btn-small" style="background: #8b5cf6; color: white;" onclick="refillStock('${med.id}')">📦 Recargar stock</button>` : ''}
+                            <button class="btn-small btn-edit" onclick="editMedication('${med.id}')"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>Editar</button>
+                            <button class="btn-small btn-delete" onclick="deleteMedication('${med.id}')"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>Eliminar</button>
+                            ${med.currentStock !== undefined ? `<button class="btn-small" style="background: #8b5cf6; color: white;" onclick="refillStock('${med.id}')"><svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>Recargar stock</button>` : ''}
                         </div>
                     </div>
                 `;
@@ -1083,7 +2067,7 @@
                 med.currentStock = med.boxQuantity;
                 saveData();
                 renderAll();
-                showAlert(`✅ Stock recargado a ${med.boxQuantity} pastillas`);
+                showAlert(`✓ Stock recargado a ${med.boxQuantity} pastillas`);
             }
         }
 
@@ -1094,7 +2078,7 @@
             if (sortedHistory.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div class="empty-state-icon">📊</div>
+                        <div class="empty-state-icon"><svg style="width: 60px; height: 60px;" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="1.5"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
                         <p>Todavía no hay historial</p>
                         <p style="font-size: 12px; margin-top: 10px;">El historial se irá generando a medida que tomes tus medicamentos</p>
                     </div>
@@ -1109,7 +2093,7 @@
                     <div class="history-item">
                         <div class="history-date">${date.toLocaleDateString('es-AR')} - ${date.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>
                         <div class="history-med">${med ? med.name : 'Medicamento eliminado'}</div>
-                        <div class="history-status">${item.status === 'taken' ? '✅ Tomado' : '❌ Omitido'}</div>
+                        <div class="history-status">${item.status === 'taken' ? '<svg style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Tomado' : '❌ Omitido'}</div>
                     </div>
                 `;
             }).join('');
@@ -1298,7 +2282,7 @@
             const check = checkCanTake(item.medId);
 
             if (!check.canTake) {
-                showAlert(`❌ No podés tomar este medicamento todavía.\n\n${check.reason}`);
+                showAlert(`✗ No podés tomar este medicamento todavía.\n\n${check.reason}`);
                 return;
             }
 
@@ -1335,7 +2319,7 @@
             closeConfirmModal();
             renderAll();
 
-            showAlert('✅ ¡Perfecto! Medicamento registrado correctamente');
+            showAlert('✓ ¡Perfecto! Medicamento registrado correctamente');
         }
 
         function closeConfirmModal() {
@@ -1366,7 +2350,7 @@
             notifEl.style.borderLeftColor = med.color || '#667eea';
             
             const titleEl = document.getElementById('notifTitle');
-            titleEl.textContent = '⏰ ¡Es hora de tomar tu medicamento!';
+            titleEl.innerHTML = '<svg style="width: 22px; height: 22px; vertical-align: middle; margin-right: 8px;" viewBox="0 0 24 24" fill="none" stroke="' + (med.color || '#667eea') + '" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>¡Es hora de tomar tu medicamento!';
             titleEl.style.color = med.color || '#667eea';
             
             document.getElementById('notifMessage').innerHTML = `
@@ -1651,8 +2635,194 @@
             localStorage.setItem('history', JSON.stringify(history));
         }
 
+        // === GESTIÓN DE MODOS ===
+        let currentMode = localStorage.getItem('appMode') || 'welcome';
+
+        function showWelcome() {
+            localStorage.setItem('appMode', 'welcome');
+            document.getElementById('welcomeScreen').classList.add('active');
+            document.getElementById('techMode').classList.remove('active');
+            document.getElementById('assistedMode').classList.remove('active');
+        }
+
+        function selectMode(mode) {
+            localStorage.setItem('appMode', mode);
+            currentMode = mode;
+            
+            document.getElementById('welcomeScreen').classList.remove('active');
+            
+            if (mode === 'tech') {
+                document.getElementById('techMode').classList.add('active');
+                document.getElementById('assistedMode').classList.remove('active');
+                document.querySelector('#techMode .mode-toggle-btn').style.display = 'flex';
+                init(); // Inicializar el modo tech
+            } else if (mode === 'assisted') {
+                document.getElementById('techMode').classList.remove('active');
+                document.getElementById('assistedMode').classList.add('active');
+                renderAssistedMode();
+            }
+        }
+
+        function initMode() {
+            if (currentMode === 'welcome') {
+                showWelcome();
+            } else {
+                selectMode(currentMode);
+            }
+        }
+
+        // === RENDERIZADO MODO ASISTIDO ===
+        function renderAssistedMode() {
+            updateAssistedDate();
+            renderAssistedToday();
+        }
+
+        function updateAssistedDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('es-ES', options);
+            const assistedDateEl = document.getElementById('assistedDate');
+            if (assistedDateEl) {
+                assistedDateEl.textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+            }
+        }
+
+        function renderAssistedToday() {
+            const container = document.getElementById('assistedTodayList');
+            if (!container) return;
+
+            const now = new Date();
+            const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
+            const pendingMeds = [];
+            
+            medications.forEach(med => {
+                if (med.scheduleType === 'specific') {
+                    const [h, m] = med.time.split(':');
+                    const medTimeMinutes = parseInt(h) * 60 + parseInt(m);
+                    
+                    const wasTaken = history.some(h => 
+                        h.medicationId === med.id && 
+                        h.time === med.time && 
+                        h.date === now.toLocaleDateString('es-ES')
+                    );
+                    
+                    // Mostrar medicamentos en ventana de 30 min antes y 2 horas después
+                    if (!wasTaken && medTimeMinutes >= currentTimeMinutes - 30 && medTimeMinutes <= currentTimeMinutes + 120) {
+                        pendingMeds.push({
+                            ...med,
+                            displayTime: med.time
+                        });
+                    }
+                } else if (med.scheduleType === 'interval') {
+                    const [startH, startM] = med.firstDose.split(':');
+                    let nextDoseTime = new Date();
+                    nextDoseTime.setHours(parseInt(startH), parseInt(startM), 0);
+                    
+                    while (nextDoseTime < now) {
+                        nextDoseTime = new Date(nextDoseTime.getTime() + med.interval * 60 * 60 * 1000);
+                    }
+                    
+                    const displayTime = `${String(nextDoseTime.getHours()).padStart(2, '0')}:${String(nextDoseTime.getMinutes()).padStart(2, '0')}`;
+                    const wasTaken = history.some(h => 
+                        h.medicationId === med.id && 
+                        h.time === displayTime && 
+                        h.date === now.toLocaleDateString('es-ES')
+                    );
+                    
+                    const timeDiff = nextDoseTime - now;
+                    if (!wasTaken && timeDiff >= -30*60*1000 && timeDiff <= 120*60*1000) {
+                        pendingMeds.push({
+                            ...med,
+                            displayTime: displayTime
+                        });
+                    }
+                }
+            });
+            
+            pendingMeds.sort((a, b) => a.displayTime.localeCompare(b.displayTime));
+            
+            if (pendingMeds.length === 0) {
+                container.innerHTML = '<div class="assisted-empty">✓ No hay medicamentos pendientes</div>';
+                return;
+            }
+            
+            container.innerHTML = pendingMeds.map(med => `
+                <div class="assisted-med-item">
+                    <div class="assisted-med-time">${med.displayTime}</div>
+                    <div class="assisted-med-name">${med.name}</div>
+                    <div class="assisted-med-dose">${med.indication}</div>
+                    <button class="assisted-btn-take" onclick="markAssistedTaken('${med.id}', '${med.displayTime}')">
+                        ✓ Ya lo tomé
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function markAssistedTaken(medId, time) {
+            const med = medications.find(m => m.id === medId);
+            if (!med) return;
+            
+            const now = new Date();
+            
+            history.push({
+                medicationId: medId,
+                medicationName: med.name,
+                time: time,
+                date: now.toLocaleDateString('es-ES'),
+                timestamp: now.getTime()
+            });
+            
+            med.currentStock = Math.max(0, med.currentStock - 1);
+            
+            saveData();
+            renderAssistedMode();
+            showAlert(`✓ ${med.name} marcado como tomado`);
+            
+            if (med.currentStock <= 3 && med.currentStock > 0) {
+                setTimeout(() => {
+                    showAlert(`⚠️ Quedan solo ${med.currentStock} pastillas de ${med.name}`);
+                }, 1000);
+            } else if (med.currentStock === 0) {
+                setTimeout(() => {
+                    showAlert(`⚠️ Se acabaron las pastillas de ${med.name}`);
+                }, 1000);
+            }
+        }
+
+        function switchToTechAndAddMed() {
+            selectMode('tech');
+            setTimeout(() => {
+                showAddMedModal();
+            }, 300);
+        }
+
+        function showAssistedAllMeds() {
+            if (medications.length === 0) {
+                showAlert('No tienes medicamentos registrados todavía.');
+                return;
+            }
+            
+            let message = 'TUS MEDICINAS:\n\n';
+            medications.forEach((med, index) => {
+                let schedule = '';
+                if (med.scheduleType === 'specific') {
+                    schedule = med.time;
+                } else {
+                    schedule = `Cada ${med.interval} horas desde ${med.firstDose}`;
+                }
+                
+                message += `${index + 1}. ${med.name}\n`;
+                message += `   ${med.indication}\n`;
+                message += `   Horario: ${schedule}\n`;
+                message += `   Stock: ${med.currentStock} pastillas\n\n`;
+            });
+            
+            showAlert(message);
+        }
+
         // Iniciar app
-        init();
+        initMode();
     </script>
+    </div> <!-- Cierra #techMode -->
 </body>
 </html>
