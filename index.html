@@ -622,12 +622,14 @@
             
             <div class="form-group">
                 <label>Nombre del medicamento *</label>
-                <input type="text" id="medName" placeholder="Ej: Levotiroxina 50mcg">
+                <input type="text" id="medName" placeholder="Ej: Levotiroxina 50mcg" 
+                       oninput="validateMedName(this)">
             </div>
 
             <div class="form-group">
                 <label>Indicación (¿Para qué es?) *</label>
-                <input type="text" id="medIndication" placeholder="Ej: Para la tiroides">
+                <input type="text" id="medIndication" placeholder="Ej: Para la tiroides"
+                       oninput="validateLettersOnly(this)">
             </div>
 
             <div class="form-group">
@@ -646,7 +648,8 @@
 
             <div class="form-group">
                 <label>Pastillas por envase *</label>
-                <input type="number" id="medBoxQuantity" placeholder="Ej: 30" min="1">
+                <input type="text" id="medBoxQuantity" placeholder="Ej: 30"
+                       oninput="validateNumbersOnly(this)">
                 <div class="help-text">Te avisaremos cuando queden 5 o menos</div>
             </div>
 
@@ -808,6 +811,28 @@
                 confirmResolve(result);
                 confirmResolve = null;
             }
+        }
+
+        // VALIDACIONES DE CAMPOS
+        function validateMedName(input) {
+            // Permitir letras, espacios y números (pero números solo si hay letras)
+            input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ0-9\s]/g, '');
+            
+            // Si es solo números, limpiar
+            if (/^\d+$/.test(input.value)) {
+                input.value = '';
+                showAlert('El nombre debe contener letras');
+            }
+        }
+
+        function validateLettersOnly(input) {
+            // Solo letras y espacios
+            input.value = input.value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+        }
+
+        function validateNumbersOnly(input) {
+            // Solo números
+            input.value = input.value.replace(/[^0-9]/g, '');
         }
 
         // Estado global
