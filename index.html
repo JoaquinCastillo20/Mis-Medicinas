@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Control inteligente de medicación con recordatorios, ayuno y dependencias">
+    <meta name="theme-color" content="#667eea">
+    <title>Mi Control de Medicación</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .app-container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .btn-secondary {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            color: #333;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .med-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 6px solid;
+        }
+
+        .med-card h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .med-card .detail {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .med-card .detail span {
+            margin-right: 5px;
+        }
+
+        .med-card .actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-take {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        .pending-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        }
+
+        .taken-card {
+            background: #d1fae5;
+            opacity: 0.7;
+        }
+
+        .blocked-card {
+            background: #fee2e2;
+        }
+
+        .low-stock-card {
+            background: #ffedd5;
+            border-left-color: #f97316 !important;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-taken {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-blocked {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-low-stock {
+            background: #ffedd5;
+            color: #9a3412;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-width: 350px;
+            z-index: 2000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            border-left: 6px solid;
+        }
+
+        .notification.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .notification-message {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-date {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .history-med {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-status {
+            font-size: 13px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .conditional-field {
+            background: #f0f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border: 2px solid #bfdbfe;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .color-picker-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.15);
+        }
+
+        .stock-warning {
+            background: #ffedd5;
+            border: 2px solid #f97316;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stock-warning-icon {
+            font-size: 24px;
+        }
+
+        .stock-warning-text {
+            flex: 1;
+            font-size: 13px;
+            color: #9a3412;
+        }
+
+        .treatment-end-card {
+            background: #dbeafe;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .treatment-end-card h3 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .treatment-end-card p {
+            color: #1e3a8a;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+
+        .treatment-end-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-extend {
+            flex: 1;
+            padding: 10px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-finish {
+            flex: 1;
+            padding: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <h1>💊 Control de Medicación</h1>
+            <p id="currentTime">Cargando...</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('hoy')">🏠 Hoy</button>
+            <button class="tab" onclick="switchTab('medicamentos')">💊 Medicamentos</button>
+            <button class="tab" onclick="switchTab('historial')">📊 Historial</button>
+        </div>
+
+        <div class="content">
+            <!-- TAB: HOY -->
+            <div id="tab-hoy" class="tab-content active">
+                <div id="treatmentEndAlerts"></div>
+                <div id="todayMedications"></div>
+            </div>
+
+            <!-- TAB: MEDICAMENTOS -->
+            <div id="tab-medicamentos" class="tab-content">
+                <button class="btn-primary" onclick="showAddMedModal()">➕ Agregar Medicamento</button>
+                <div id="medicationsList" style="margin-top: 20px;"></div>
+            </div>
+
+            <!-- TAB: HISTORIAL -->
+            <div id="tab-historial" class="tab-content">
+                <div id="historyList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Agregar/Editar Medicamento -->
+    <div id="medModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Agregar Medicamento</div>
+            
+            <div class="form-group">
+                <label>Nombre del medicamento *</label>
+                <input type="text" id="medName" placeholder="Ej: Levotiroxina 50mcg">
+            </div>
+
+            <div class="form-group">
+                <label>Indicación (¿Para qué es?) *</label>
+                <input type="text" id="medIndication" placeholder="Ej: Para la tiroides">
+            </div>
+
+            <div class="form-group">
+                <label>Color del medicamento *</label>
+                <div class="color-picker-group">
+                    <div class="color-option" style="background: #ef4444;" data-color="#ef4444" onclick="selectColor('#ef4444')"></div>
+                    <div class="color-option" style="background: #f97316;" data-color="#f97316" onclick="selectColor('#f97316')"></div>
+                    <div class="color-option" style="background: #f59e0b;" data-color="#f59e0b" onclick="selectColor('#f59e0b')"></div>
+                    <div class="color-option" style="background: #10b981;" data-color="#10b981" onclick="selectColor('#10b981')"></div>
+                    <div class="color-option" style="background: #06b6d4;" data-color="#06b6d4" onclick="selectColor('#06b6d4')"></div>
+                    <div class="color-option selected" style="background: #3b82f6;" data-color="#3b82f6" onclick="selectColor('#3b82f6')"></div>
+                    <div class="color-option" style="background: #8b5cf6;" data-color="#8b5cf6" onclick="selectColor('#8b5cf6')"></div>
+                    <div class="color-option" style="background: #ec4899;" data-color="#ec4899" onclick="selectColor('#ec4899')"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Pastillas por envase *</label>
+                <input type="number" id="medBoxQuantity" placeholder="Ej: 30" min="1">
+                <div class="help-text">Te avisaremos cuando queden 5 o menos</div>
+            </div>
+
+            <div class="form-group">
+                <label>Duración del tratamiento *</label>
+                <select id="medDuration">
+                    <option value="7">1 semana</option>
+                    <option value="15">15 días</option>
+                    <option value="30">1 mes</option>
+                    <option value="60">2 meses</option>
+                    <option value="90">3 meses</option>
+                    <option value="indefinite">Indefinido / Para siempre</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de programación *</label>
+                <select id="medScheduleType" onchange="updateScheduleFields()">
+                    <option value="specific">Horario específico</option>
+                    <option value="interval">Cada X horas</option>
+                </select>
+            </div>
+
+            <div id="specificTimeField" class="form-group">
+                <label>Horario *</label>
+                <input type="time" id="medTime">
+            </div>
+
+            <div id="intervalField" class="form-group" style="display: none;">
+                <label>Cada cuántas horas *</label>
+                <select id="medInterval">
+                    <option value="4">Cada 4 horas</option>
+                    <option value="6">Cada 6 horas</option>
+                    <option value="8">Cada 8 horas</option>
+                    <option value="12">Cada 12 horas</option>
+                    <option value="24">Cada 24 horas</option>
+                </select>
+                <div class="help-text">La primera toma será a la hora que elijas abajo</div>
+                <input type="time" id="medFirstDose" style="margin-top: 10px;">
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="medRequiresFasting" onchange="toggleFastingFields()">
+                <label>Requiere ayuno previo</label>
+            </div>
+
+            <div id="fastingFields" class="conditional-field" style="display: none;">
+                <div class="form-group">
+                    <label>Horas de ayuno necesarias</label>
+                    <select id="medFastingHours">
+                        <option value="2">2 horas</option>
+                        <option value="4" selected>4 horas</option>
+                        <option value="6">6 horas</option>
+                        <option value="8">8 horas</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="medRequiresWaitAfter" onchange="toggleWaitAfterFields()">
+                <label>Esperar después de tomar</label>
+            </div>
+
+            <div id="waitAfterFields" class="conditional-field" style="display: none;">
+                <div class="form-group">
+                    <label>Minutos de espera (sin comer/beber)</label>
+                    <input type="number" id="medWaitMinutes" value="30" min="5" max="180">
+                    <div class="help-text">Tiempo que debes esperar antes de comer o tomar otro medicamento</div>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="medDependsOn" onchange="toggleDependencyFields()">
+                <label>Depende de otro medicamento</label>
+            </div>
+
+            <div id="dependencyFields" class="conditional-field" style="display: none;">
+                <div class="form-group">
+                    <label>Medicamento del que depende</label>
+                    <select id="medDependency"></select>
+                    <div class="help-text">Este medicamento solo se podrá tomar después del seleccionado</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Notas adicionales (opcional)</label>
+                <textarea id="medNotes" rows="3" placeholder="Ej: Tomar con agua, no con jugo"></textarea>
+            </div>
+
+            <button class="btn-primary" onclick="saveMedication()">💾 Guardar</button>
+            <button class="btn-secondary" onclick="closeModal()" style="width: 100%; margin-top: 10px;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- MODAL: Confirmar toma -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">Confirmar toma</div>
+            <p id="confirmMessage" style="margin-bottom: 20px;"></p>
+            <button class="btn-primary" onclick="confirmTake()">✅ Sí, ya lo tomé</button>
+            <button class="btn-secondary" onclick="closeConfirmModal()" style="width: 100%; margin-top: 10px;">Cancelar</button>
+        </div>
+    </div>
+
+    <!-- Notificación -->
+    <div id="notification" class="notification">
+        <div class="notification-title" id="notifTitle"></div>
+        <div class="notification-message" id="notifMessage"></div>
+        <div class="notification-actions">
+            <button class="btn-small btn-take" onclick="quickTake()">✅ Ya lo tomé</button>
+            <button class="btn-small" onclick="dismissNotification()" style="background: #6b7280; color: white;">❌ Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // Estado global
+        let medications = JSON.parse(localStorage.getItem('medications')) || [];
+        let history = JSON.parse(localStorage.getItem('history')) || [];
+        let currentEditingId = null;
+        let currentNotificationMed = null;
+        let selectedColor = '#3b82f6';
+        let notificationIntervals = {};
+
+        // Inicializar
+        function init() {
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            setInterval(checkSchedule, 60000);
+            requestNotificationPermission();
+            renderAll();
+            checkSchedule();
+            checkTreatmentEnds();
+        }
+
+        function updateCurrentTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('currentTime').textContent = now.toLocaleDateString('es-AR', options);
+        }
+
+        function requestNotificationPermission() {
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            if (tab === 'hoy') renderToday();
+            if (tab === 'medicamentos') renderMedications();
+            if (tab === 'historial') renderHistory();
+        }
+
+        function renderAll() {
+            renderToday();
+            renderMedications();
+            renderHistory();
+        }
+
+        // === COLOR PICKER ===
+        function selectColor(color) {
+            selectedColor = color;
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+                if (opt.dataset.color === color) {
+                    opt.classList.add('selected');
+                }
+            });
+        }
+
+        // === CONTROL DE TRATAMIENTOS ===
+        function checkTreatmentEnds() {
+            const now = new Date();
+            medications.forEach(med => {
+                if (med.duration !== 'indefinite' && med.startDate && !med.treatmentEnded) {
+                    const startDate = new Date(med.startDate);
+                    const endDate = new Date(startDate.getTime() + med.duration * 24 * 60 * 60 * 1000);
+                    
+                    if (now >= endDate) {
+                        med.awaitingTreatmentDecision = true;
+                    }
+                }
+            });
+            saveData();
+        }
+
+        function renderTreatmentEndAlerts() {
+            const container = document.getElementById('treatmentEndAlerts');
+            const medsAwaitingDecision = medications.filter(m => m.awaitingTreatmentDecision);
+            
+            if (medsAwaitingDecision.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = medsAwaitingDecision.map(med => `
+                <div class="treatment-end-card">
+                    <h3>⏰ Fin del tratamiento</h3>
+                    <p><strong>${med.name}</strong><br>
+                    El período de tratamiento ha finalizado. ¿Deseas continuar o terminar este medicamento?</p>
+                    <div class="treatment-end-actions">
+                        <button class="btn-extend" onclick="extendTreatment('${med.id}')">✅ Continuar</button>
+                        <button class="btn-finish" onclick="finishTreatment('${med.id}')">🛑 Finalizar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function extendTreatment(medId) {
+            const med = medications.find(m => m.id === medId);
+            if (med) {
+                med.startDate = new Date().toISOString();
+                med.awaitingTreatmentDecision = false;
+                saveData();
+                renderAll();
+                alert('✅ Tratamiento extendido correctamente');
+            }
+        }
+
+        function finishTreatment(medId) {
+            if (confirm('¿Estás seguro de que querés finalizar este medicamento? Se eliminará de tu lista.')) {
+                medications = medications.filter(m => m.id !== medId);
+                saveData();
+                renderAll();
+                alert('✅ Medicamento finalizado y eliminado');
+            }
+        }
+
+        // === RENDERIZADO ===
+        function renderToday() {
+            renderTreatmentEndAlerts();
+            
+            const container = document.getElementById('todayMedications');
+            const today = new Date().toDateString();
+            const todayMeds = getTodaySchedule();
+
+            if (todayMeds.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎉</div>
+                        <p>No tenés medicamentos programados para hoy</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Agregá medicamentos en la pestaña "Medicamentos"</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = todayMeds.map(item => {
+                const med = medications.find(m => m.id === item.medId);
+                if (!med) return '';
+
+                const cardStyle = `border-left-color: ${med.color || '#667eea'};`;
+                let cardClass = 'med-card';
+                let statusBadge = '';
+                let actionButtons = '';
+                let stockWarning = '';
+
+                // Warning de stock bajo
+                if (med.currentStock !== undefined && med.currentStock <= 5) {
+                    cardClass += ' low-stock-card';
+                    stockWarning = `
+                        <div class="stock-warning">
+                            <div class="stock-warning-icon">⚠️</div>
+                            <div class="stock-warning-text">
+                                <strong>Stock bajo:</strong> Quedan ${med.currentStock} pastillas. ¡Recordá comprar!
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (item.taken) {
+                    cardClass += ' taken-card';
+                    statusBadge = '<span class="status-badge status-taken">✅ Tomado</span>';
+                } else if (item.blocked) {
+                    cardClass += ' blocked-card';
+                    statusBadge = '<span class="status-badge status-blocked">🚫 Bloqueado</span>';
+                    actionButtons = `<p style="font-size: 12px; color: #991b1b; margin-top: 10px;">${item.blockReason}</p>`;
+                } else if (item.isPending) {
+                    cardClass += ' pending-card';
+                    statusBadge = '<span class="status-badge status-pending">⏰ Pendiente</span>';
+                    actionButtons = `
+                        <div class="actions">
+                            <button class="btn-small btn-take" onclick="takeMedication('${item.id}')">✅ Ya lo tomé</button>
+                        </div>
+                    `;
+                } else {
+                    actionButtons = `<p style="font-size: 12px; color: #666; margin-top: 10px;">Programado para las ${item.scheduledTime}</p>`;
+                }
+
+                return `
+                    <div class="${cardClass}" style="${cardStyle}">
+                        <h3>${med.name} ${statusBadge}</h3>
+                        <div class="detail">💡 ${med.indication}</div>
+                        <div class="detail">⏰ Horario: ${item.scheduledTime}</div>
+                        ${med.requiresFasting ? `<div class="detail">🍽️ Requiere ${med.fastingHours}hs de ayuno</div>` : ''}
+                        ${med.requiresWaitAfter ? `<div class="detail">⏳ Esperar ${med.waitMinutes} min después</div>` : ''}
+                        ${med.currentStock !== undefined ? `<div class="detail">📦 Stock: ${med.currentStock} pastillas</div>` : ''}
+                        ${med.notes ? `<div class="detail">📝 ${med.notes}</div>` : ''}
+                        ${item.takenAt ? `<div class="detail" style="color: #10b981;">✅ Tomado a las ${new Date(item.takenAt).toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>` : ''}
+                        ${actionButtons}
+                        ${stockWarning}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderMedications() {
+            const container = document.getElementById('medicationsList');
+            
+            if (medications.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💊</div>
+                        <p>No tenés medicamentos configurados</p>
+                        <p style="font-size: 12px; margin-top: 10px;">Presioná el botón "Agregar Medicamento" para empezar</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = medications.map(med => {
+                const cardStyle = `border-left-color: ${med.color || '#667eea'};`;
+                const durationText = med.duration === 'indefinite' ? 'Indefinido' : `${med.duration} días`;
+                const stockBadge = med.currentStock !== undefined && med.currentStock <= 5 ? 
+                    `<span class="status-badge status-low-stock">⚠️ Stock: ${med.currentStock}</span>` : '';
+
+                return `
+                    <div class="med-card" style="${cardStyle}">
+                        <h3>${med.name} ${stockBadge}</h3>
+                        <div class="detail">💡 ${med.indication}</div>
+                        <div class="detail">
+                            ${med.scheduleType === 'specific' ? 
+                                `⏰ ${med.time}` : 
+                                `🔄 Cada ${med.interval} horas (primera: ${med.firstDose})`
+                            }
+                        </div>
+                        <div class="detail">📅 Duración: ${durationText}</div>
+                        ${med.currentStock !== undefined ? `<div class="detail">📦 Stock: ${med.currentStock}/${med.boxQuantity} pastillas</div>` : ''}
+                        ${med.requiresFasting ? `<div class="detail">🍽️ Ayuno: ${med.fastingHours}hs antes</div>` : ''}
+                        ${med.requiresWaitAfter ? `<div class="detail">⏳ Esperar: ${med.waitMinutes} min después</div>` : ''}
+                        ${med.dependsOn ? `<div class="detail">🔗 Depende de: ${getMedName(med.dependsOn)}</div>` : ''}
+                        <div class="actions">
+                            <button class="btn-small btn-edit" onclick="editMedication('${med.id}')">✏️ Editar</button>
+                            <button class="btn-small btn-delete" onclick="deleteMedication('${med.id}')">🗑️ Eliminar</button>
+                            ${med.currentStock !== undefined ? `<button class="btn-small" style="background: #8b5cf6; color: white;" onclick="refillStock('${med.id}')">📦 Recargar stock</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function refillStock(medId) {
+            const med = medications.find(m => m.id === medId);
+            if (med && med.boxQuantity) {
+                med.currentStock = med.boxQuantity;
+                saveData();
+                renderAll();
+                alert(`✅ Stock recargado a ${med.boxQuantity} pastillas`);
+            }
+        }
+
+        function renderHistory() {
+            const container = document.getElementById('historyList');
+            const sortedHistory = [...history].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            if (sortedHistory.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📊</div>
+                        <p>Todavía no hay historial</p>
+                        <p style="font-size: 12px; margin-top: 10px;">El historial se irá generando a medida que tomes tus medicamentos</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = sortedHistory.map(item => {
+                const date = new Date(item.timestamp);
+                const med = medications.find(m => m.id === item.medId);
+                return `
+                    <div class="history-item">
+                        <div class="history-date">${date.toLocaleDateString('es-AR')} - ${date.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'})}</div>
+                        <div class="history-med">${med ? med.name : 'Medicamento eliminado'}</div>
+                        <div class="history-status">${item.status === 'taken' ? '✅ Tomado' : '❌ Omitido'}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // === LÓGICA DE PROGRAMACIÓN ===
+        function getTodaySchedule() {
+            const now = new Date();
+            const today = now.toDateString();
+            let schedule = [];
+
+            medications.forEach(med => {
+                if (med.scheduleType === 'specific') {
+                    const [hours, minutes] = med.time.split(':');
+                    const scheduledTime = new Date();
+                    scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+                    const item = {
+                        id: `${med.id}-${today}`,
+                        medId: med.id,
+                        scheduledTime: med.time,
+                        scheduledDate: scheduledTime,
+                        taken: false,
+                        isPending: false,
+                        blocked: false,
+                        blockReason: ''
+                    };
+
+                    const takenToday = history.find(h => 
+                        h.medId === med.id && 
+                        new Date(h.timestamp).toDateString() === today &&
+                        h.status === 'taken'
+                    );
+
+                    if (takenToday) {
+                        item.taken = true;
+                        item.takenAt = takenToday.timestamp;
+                    } else if (scheduledTime <= now) {
+                        item.isPending = true;
+                    }
+
+                    schedule.push(item);
+
+                } else {
+                    const interval = parseInt(med.interval);
+                    const [firstHours, firstMinutes] = med.firstDose.split(':');
+                    let currentTime = new Date();
+                    currentTime.setHours(parseInt(firstHours), parseInt(firstMinutes), 0, 0);
+
+                    while (currentTime.toDateString() === today) {
+                        const timeStr = currentTime.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'});
+                        
+                        const item = {
+                            id: `${med.id}-${currentTime.getTime()}`,
+                            medId: med.id,
+                            scheduledTime: timeStr,
+                            scheduledDate: new Date(currentTime),
+                            taken: false,
+                            isPending: false,
+                            blocked: false,
+                            blockReason: ''
+                        };
+
+                        const taken = history.find(h => 
+                            h.medId === med.id && 
+                            Math.abs(new Date(h.timestamp) - currentTime) < 30 * 60 * 1000 &&
+                            h.status === 'taken'
+                        );
+
+                        if (taken) {
+                            item.taken = true;
+                            item.takenAt = taken.timestamp;
+                        } else if (currentTime <= now) {
+                            item.isPending = true;
+                        }
+
+                        schedule.push(item);
+                        currentTime = new Date(currentTime.getTime() + interval * 60 * 60 * 1000);
+                    }
+                }
+            });
+
+            schedule = schedule.map(item => {
+                const check = checkCanTake(item.medId);
+                if (!check.canTake) {
+                    item.blocked = true;
+                    item.blockReason = check.reason;
+                }
+                return item;
+            });
+
+            schedule.sort((a, b) => a.scheduledDate - b.scheduledDate);
+
+            return schedule;
+        }
+
+        function checkCanTake(medId) {
+            const med = medications.find(m => m.id === medId);
+            if (!med) return { canTake: false, reason: 'Medicamento no encontrado' };
+
+            const now = new Date();
+
+            if (med.requiresFasting) {
+                const lastMeal = getLastMealTime();
+                if (lastMeal) {
+                    const hoursSinceLastMeal = (now - lastMeal) / (1000 * 60 * 60);
+                    if (hoursSinceLastMeal < med.fastingHours) {
+                        return { 
+                            canTake: false, 
+                            reason: `Necesitás ${med.fastingHours}hs de ayuno. Última comida hace ${hoursSinceLastMeal.toFixed(1)}hs` 
+                        };
+                    }
+                }
+            }
+
+            if (med.dependsOn) {
+                const dependencyMed = medications.find(m => m.id === med.dependsOn);
+                const today = now.toDateString();
+                const dependencyTaken = history.find(h => 
+                    h.medId === med.dependsOn && 
+                    new Date(h.timestamp).toDateString() === today &&
+                    h.status === 'taken'
+                );
+
+                if (!dependencyTaken) {
+                    return { 
+                        canTake: false, 
+                        reason: `Primero debes tomar: ${dependencyMed ? dependencyMed.name : 'medicamento anterior'}` 
+                    };
+                }
+
+                if (dependencyMed && dependencyMed.requiresWaitAfter) {
+                    const timeSinceDependency = (now - new Date(dependencyTaken.timestamp)) / (1000 * 60);
+                    if (timeSinceDependency < dependencyMed.waitMinutes) {
+                        return { 
+                            canTake: false, 
+                            reason: `Debes esperar ${dependencyMed.waitMinutes} min después de ${dependencyMed.name}. Faltan ${Math.ceil(dependencyMed.waitMinutes - timeSinceDependency)} min` 
+                        };
+                    }
+                }
+            }
+
+            if (med.scheduleType === 'interval') {
+                const lastTaken = history
+                    .filter(h => h.medId === medId && h.status === 'taken')
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+
+                if (lastTaken) {
+                    const hoursSinceLastTaken = (now - new Date(lastTaken.timestamp)) / (1000 * 60 * 60);
+                    if (hoursSinceLastTaken < med.interval) {
+                        return { 
+                            canTake: false, 
+                            reason: `Debes esperar ${med.interval}hs entre tomas. Faltan ${Math.ceil(med.interval - hoursSinceLastTaken)}hs` 
+                        };
+                    }
+                }
+            }
+
+            return { canTake: true };
+        }
+
+        function getLastMealTime() {
+            const today = new Date().toDateString();
+            const mealsToday = history.filter(h => {
+                const med = medications.find(m => m.id === h.medId);
+                return new Date(h.timestamp).toDateString() === today && 
+                       h.status === 'taken' && 
+                       med && 
+                       !med.requiresFasting;
+            });
+
+            if (mealsToday.length === 0) return null;
+
+            const lastMeal = mealsToday.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+            return new Date(lastMeal.timestamp);
+        }
+
+        // === TOMAR MEDICAMENTO ===
+        function takeMedication(scheduleId) {
+            const schedule = getTodaySchedule();
+            const item = schedule.find(s => s.id === scheduleId);
+            
+            if (!item) return;
+
+            const med = medications.find(m => m.id === item.medId);
+            const check = checkCanTake(item.medId);
+
+            if (!check.canTake) {
+                alert(`❌ No podés tomar este medicamento todavía.\n\n${check.reason}`);
+                return;
+            }
+
+            currentNotificationMed = item;
+            document.getElementById('confirmMessage').innerHTML = `
+                <strong>${med.name}</strong><br>
+                Horario programado: ${item.scheduledTime}<br><br>
+                ¿Confirmás que ya tomaste este medicamento?
+            `;
+            document.getElementById('confirmModal').classList.add('show');
+        }
+
+        function confirmTake() {
+            if (!currentNotificationMed) return;
+
+            const now = new Date();
+            const med = medications.find(m => m.id === currentNotificationMed.medId);
+            
+            history.push({
+                medId: currentNotificationMed.medId,
+                timestamp: now.toISOString(),
+                status: 'taken'
+            });
+
+            // Actualizar stock
+            if (med && med.currentStock !== undefined) {
+                med.currentStock = Math.max(0, med.currentStock - 1);
+            }
+
+            // Limpiar notificaciones
+            stopNotificationReminders(currentNotificationMed.medId);
+
+            saveData();
+            closeConfirmModal();
+            renderAll();
+
+            alert('✅ ¡Perfecto! Medicamento registrado correctamente');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('confirmModal').classList.remove('show');
+            currentNotificationMed = null;
+        }
+
+        // === NOTIFICACIONES ===
+        function checkSchedule() {
+            const now = new Date();
+            const currentTime = now.toLocaleTimeString('es-AR', {hour: '2-digit', minute: '2-digit'});
+            const schedule = getTodaySchedule();
+
+            schedule.forEach(item => {
+                if (item.scheduledTime === currentTime && !item.taken && !item.blocked) {
+                    const med = medications.find(m => m.id === item.medId);
+                    showMedicationNotification(med, item);
+                }
+            });
+
+            checkTreatmentEnds();
+        }
+
+        function showMedicationNotification(med, scheduleItem) {
+            currentNotificationMed = scheduleItem;
+            
+            const notifEl = document.getElementById('notification');
+            notifEl.style.borderLeftColor = med.color || '#667eea';
+            
+            const titleEl = document.getElementById('notifTitle');
+            titleEl.textContent = '⏰ ¡Es hora de tomar tu medicamento!';
+            titleEl.style.color = med.color || '#667eea';
+            
+            document.getElementById('notifMessage').innerHTML = `
+                <strong>${med.name}</strong><br>
+                ${med.indication}
+            `;
+            
+            notifEl.classList.add('show');
+
+            // Notificación del sistema
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('💊 Control de Medicación', {
+                    body: `Es hora de tomar: ${med.name}`,
+                    icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="' + encodeURIComponent(med.color) + '"/%3E%3Ctext x="50" y="70" font-size="60" text-anchor="middle" fill="white"%3E💊%3C/text%3E%3C/svg%3E',
+                    requireInteraction: true
+                });
+            }
+
+            // Iniciar recordatorios cada 10 minutos
+            startNotificationReminders(med, scheduleItem);
+        }
+
+        function startNotificationReminders(med, scheduleItem) {
+            // Limpiar recordatorios previos de este medicamento
+            stopNotificationReminders(scheduleItem.medId);
+
+            // Crear nuevo recordatorio cada 10 minutos
+            notificationIntervals[scheduleItem.medId] = setInterval(() => {
+                // Verificar si ya fue tomado
+                const schedule = getTodaySchedule();
+                const item = schedule.find(s => s.id === scheduleItem.id);
+                
+                if (item && item.taken) {
+                    stopNotificationReminders(scheduleItem.medId);
+                    return;
+                }
+
+                // Mostrar notificación nuevamente
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification('💊 Recordatorio', {
+                        body: `Recordatorio: ${med.name} - ${med.indication}`,
+                        icon: 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="45" fill="' + encodeURIComponent(med.color) + '"/%3E%3Ctext x="50" y="70" font-size="60" text-anchor="middle" fill="white"%3E💊%3C/text%3E%3C/svg%3E',
+                        requireInteraction: true
+                    });
+                }
+
+                // Mostrar notificación en app
+                currentNotificationMed = scheduleItem;
+                showMedicationNotification(med, scheduleItem);
+            }, 600000); // 10 minutos = 600000 ms
+        }
+
+        function stopNotificationReminders(medId) {
+            if (notificationIntervals[medId]) {
+                clearInterval(notificationIntervals[medId]);
+                delete notificationIntervals[medId];
+            }
+        }
+
+        function quickTake() {
+            if (currentNotificationMed) {
+                confirmTake();
+                document.getElementById('notification').classList.remove('show');
+            }
+        }
+
+        function dismissNotification() {
+            document.getElementById('notification').classList.remove('show');
+        }
+
+        // === GESTIÓN DE MEDICAMENTOS ===
+        function showAddMedModal() {
+            currentEditingId = null;
+            document.getElementById('modalTitle').textContent = 'Agregar Medicamento';
+            clearMedForm();
+            updateDependencyList();
+            document.getElementById('medModal').classList.add('show');
+        }
+
+        function editMedication(id) {
+            currentEditingId = id;
+            const med = medications.find(m => m.id === id);
+            if (!med) return;
+
+            document.getElementById('modalTitle').textContent = 'Editar Medicamento';
+            document.getElementById('medName').value = med.name;
+            document.getElementById('medIndication').value = med.indication || '';
+            document.getElementById('medBoxQuantity').value = med.boxQuantity || '';
+            document.getElementById('medDuration').value = med.duration || 'indefinite';
+            selectColor(med.color || '#3b82f6');
+            
+            document.getElementById('medScheduleType').value = med.scheduleType;
+            
+            if (med.scheduleType === 'specific') {
+                document.getElementById('medTime').value = med.time;
+            } else {
+                document.getElementById('medInterval').value = med.interval;
+                document.getElementById('medFirstDose').value = med.firstDose;
+            }
+
+            document.getElementById('medRequiresFasting').checked = med.requiresFasting || false;
+            if (med.requiresFasting) {
+                document.getElementById('medFastingHours').value = med.fastingHours;
+            }
+
+            document.getElementById('medRequiresWaitAfter').checked = med.requiresWaitAfter || false;
+            if (med.requiresWaitAfter) {
+                document.getElementById('medWaitMinutes').value = med.waitMinutes;
+            }
+
+            document.getElementById('medDependsOn').checked = med.dependsOn ? true : false;
+            if (med.dependsOn) {
+                document.getElementById('medDependency').value = med.dependsOn;
+            }
+
+            document.getElementById('medNotes').value = med.notes || '';
+
+            updateScheduleFields();
+            toggleFastingFields();
+            toggleWaitAfterFields();
+            toggleDependencyFields();
+            updateDependencyList();
+
+            document.getElementById('medModal').classList.add('show');
+        }
+
+        function saveMedication() {
+            const name = document.getElementById('medName').value.trim();
+            const indication = document.getElementById('medIndication').value.trim();
+            const scheduleType = document.getElementById('medScheduleType').value;
+            const boxQuantity = parseInt(document.getElementById('medBoxQuantity').value);
+            const duration = document.getElementById('medDuration').value;
+
+            if (!name) {
+                alert('Por favor ingresá el nombre del medicamento');
+                return;
+            }
+
+            if (!indication) {
+                alert('Por favor ingresá para qué está indicado el medicamento');
+                return;
+            }
+
+            if (!boxQuantity || boxQuantity < 1) {
+                alert('Por favor ingresá cuántas pastillas vienen en el envase');
+                return;
+            }
+
+            let med = {
+                id: currentEditingId || Date.now().toString(),
+                name: name,
+                indication: indication,
+                color: selectedColor,
+                boxQuantity: boxQuantity,
+                currentStock: currentEditingId ? medications.find(m => m.id === currentEditingId)?.currentStock || boxQuantity : boxQuantity,
+                duration: duration === 'indefinite' ? 'indefinite' : parseInt(duration),
+                startDate: currentEditingId ? medications.find(m => m.id === currentEditingId)?.startDate : new Date().toISOString(),
+                scheduleType: scheduleType,
+                requiresFasting: document.getElementById('medRequiresFasting').checked,
+                requiresWaitAfter: document.getElementById('medRequiresWaitAfter').checked,
+                notes: document.getElementById('medNotes').value.trim(),
+                awaitingTreatmentDecision: false
+            };
+
+            if (scheduleType === 'specific') {
+                med.time = document.getElementById('medTime').value;
+                if (!med.time) {
+                    alert('Por favor ingresá el horario');
+                    return;
+                }
+            } else {
+                med.interval = document.getElementById('medInterval').value;
+                med.firstDose = document.getElementById('medFirstDose').value;
+                if (!med.firstDose) {
+                    alert('Por favor ingresá la hora de la primera dosis');
+                    return;
+                }
+            }
+
+            if (med.requiresFasting) {
+                med.fastingHours = parseInt(document.getElementById('medFastingHours').value);
+            }
+
+            if (med.requiresWaitAfter) {
+                med.waitMinutes = parseInt(document.getElementById('medWaitMinutes').value);
+            }
+
+            if (document.getElementById('medDependsOn').checked) {
+                med.dependsOn = document.getElementById('medDependency').value;
+                if (!med.dependsOn) {
+                    alert('Por favor seleccioná el medicamento del que depende');
+                    return;
+                }
+            }
+
+            if (currentEditingId) {
+                medications = medications.map(m => m.id === currentEditingId ? med : m);
+            } else {
+                medications.push(med);
+            }
+
+            saveData();
+            closeModal();
+            renderAll();
+        }
+
+        function deleteMedication(id) {
+            if (!confirm('¿Estás seguro de que querés eliminar este medicamento?')) return;
+
+            medications = medications.filter(m => m.id !== id);
+            stopNotificationReminders(id);
+            saveData();
+            renderAll();
+        }
+
+        function closeModal() {
+            document.getElementById('medModal').classList.remove('show');
+            currentEditingId = null;
+        }
+
+        function clearMedForm() {
+            document.getElementById('medName').value = '';
+            document.getElementById('medIndication').value = '';
+            document.getElementById('medBoxQuantity').value = '';
+            document.getElementById('medDuration').value = 'indefinite';
+            selectColor('#3b82f6');
+            document.getElementById('medScheduleType').value = 'specific';
+            document.getElementById('medTime').value = '';
+            document.getElementById('medInterval').value = '8';
+            document.getElementById('medFirstDose').value = '';
+            document.getElementById('medRequiresFasting').checked = false;
+            document.getElementById('medFastingHours').value = '4';
+            document.getElementById('medRequiresWaitAfter').checked = false;
+            document.getElementById('medWaitMinutes').value = '30';
+            document.getElementById('medDependsOn').checked = false;
+            document.getElementById('medNotes').value = '';
+            updateScheduleFields();
+            toggleFastingFields();
+            toggleWaitAfterFields();
+            toggleDependencyFields();
+        }
+
+        // === UI HELPERS ===
+        function updateScheduleFields() {
+            const type = document.getElementById('medScheduleType').value;
+            document.getElementById('specificTimeField').style.display = type === 'specific' ? 'block' : 'none';
+            document.getElementById('intervalField').style.display = type === 'interval' ? 'block' : 'none';
+        }
+
+        function toggleFastingFields() {
+            const checked = document.getElementById('medRequiresFasting').checked;
+            document.getElementById('fastingFields').style.display = checked ? 'block' : 'none';
+        }
+
+        function toggleWaitAfterFields() {
+            const checked = document.getElementById('medRequiresWaitAfter').checked;
+            document.getElementById('waitAfterFields').style.display = checked ? 'block' : 'none';
+        }
+
+        function toggleDependencyFields() {
+            const checked = document.getElementById('medDependsOn').checked;
+            document.getElementById('dependencyFields').style.display = checked ? 'block' : 'none';
+        }
+
+        function updateDependencyList() {
+            const select = document.getElementById('medDependency');
+            const availableMeds = medications.filter(m => m.id !== currentEditingId);
+            
+            select.innerHTML = '<option value="">Seleccionar...</option>' + 
+                availableMeds.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+        }
+
+        function getMedName(id) {
+            const med = medications.find(m => m.id === id);
+            return med ? med.name : 'Desconocido';
+        }
+
+        // === PERSISTENCIA ===
+        function saveData() {
+            localStorage.setItem('medications', JSON.stringify(medications));
+            localStorage.setItem('history', JSON.stringify(history));
+        }
+
+        // Iniciar app
+        init();
+    </script>
+</body>
+</html>
