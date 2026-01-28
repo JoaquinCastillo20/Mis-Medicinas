@@ -711,11 +711,18 @@
     </div>
 
     <script>
-        // CUSTOM ALERT FUNCTION - Reemplaza alert() nativo
-        function showAlert(message) {
-            document.getElementById('customAlertMessage').textContent = message;
-            document.getElementById('customAlertOverlay').classList.add('show');
-        }
+// CUSTOM ALERT FUNCTION - Reemplaza alert() nativo
+function showAlert(message) {
+    // Si está en Android, usar Toast
+    if (window.AndroidBridge) {
+        // El Toast ya se muestra automáticamente desde Android
+        // Solo mostramos el popup custom también
+    }
+    
+    // Mostrar popup custom
+    document.getElementById('customAlertMessage').textContent = message;
+    document.getElementById('customAlertOverlay').classList.add('show');
+}
 
         function closeCustomAlert() {
             document.getElementById('customAlertOverlay').classList.remove('show');
